@@ -58,8 +58,8 @@ export default function pixelmatch(img1, img2, output, width, height, options) {
             // the color difference is above the threshold
             if (Math.abs(delta) > maxDelta) {
                 // check it's a real rendering difference or just anti-aliasing
-                if (!options.includeAA && (antialiased(img1, x, y, width, height, img2) ||
-                                           antialiased(img2, x, y, width, height, img1))) {
+                if (!options.includeAA && (antialiased(img1, x, y, width, height, img2, options.ignoreAlpha) ||
+                                           antialiased(img2, x, y, width, height, img1, options.ignoreAlpha))) {
                     // one of the pixels is anti-aliasing; draw as yellow and do not count as difference
                     // note that we do not include such pixels in a mask
                     if (output && !options.diffMask) drawPixel(output, pos, aaR, aaG, aaB);
@@ -95,7 +95,7 @@ function isPixelData(arr) {
 // check if a pixel is likely a part of anti-aliasing;
 // based on "Anti-aliased Pixel and Intensity Slope Detector" paper by V. Vysniauskas, 2009
 
-function antialiased(img, x1, y1, width, height, img2) {
+function antialiased(img, x1, y1, width, height, img2, ignoreAlpha) {
     const x0 = Math.max(x1 - 1, 0);
     const y0 = Math.max(y1 - 1, 0);
     const x2 = Math.min(x1 + 1, width - 1);
@@ -112,7 +112,7 @@ function antialiased(img, x1, y1, width, height, img2) {
             if (x === x1 && y === y1) continue;
 
             // brightness delta between the center pixel and adjacent one
-            const delta = colorDelta(img, img, pos, (y * width + x) * 4, true);
+            const delta = colorDelta(img, img, pos, (y * width + x) * 4, true, ignoreAlpha);
 
             // count the number of equal, darker and brighter adjacent pixels
             if (delta === 0) {
