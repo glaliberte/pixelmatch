@@ -6,7 +6,8 @@ const defaultOptions = {
     aaColor: [255, 255, 0], // color of anti-aliased pixels in diff output
     diffColor: [255, 0, 0], // color of different pixels in diff output
     diffColorAlt: null,     // whether to detect dark on light differences between img1 and img2 and set an alternative color to differentiate between the two
-    diffMask: false         // draw the diff over a transparent background (a mask)
+    diffMask: false,         // draw the diff over a transparent background (a mask),
+    ignoreAlpha: false
 };
 
 export default function pixelmatch(img1, img2, output, width, height, options) {
@@ -52,7 +53,7 @@ export default function pixelmatch(img1, img2, output, width, height, options) {
             const pos = (y * width + x) * 4;
 
             // squared YUV distance between colors at this pixel position, negative if the img2 pixel is darker
-            const delta = colorDelta(img1, img2, pos, pos);
+            const delta = colorDelta(img1, img2, pos, pos, undefined, options.ignoreAlpha);
 
             // the color difference is above the threshold
             if (Math.abs(delta) > maxDelta) {
@@ -173,7 +174,7 @@ function hasManySiblings(img, x1, y1, width, height) {
 // calculate color difference according to the paper "Measuring perceived color difference
 // using YIQ NTSC transmission color space in mobile applications" by Y. Kotsarenko and F. Ramos
 
-function colorDelta(img1, img2, k, m, yOnly) {
+function colorDelta(img1, img2, k, m, yOnly, ignoreAlpha) {
     let r1 = img1[k + 0];
     let g1 = img1[k + 1];
     let b1 = img1[k + 2];
@@ -183,6 +184,8 @@ function colorDelta(img1, img2, k, m, yOnly) {
     let g2 = img2[m + 1];
     let b2 = img2[m + 2];
     let a2 = img2[m + 3];
+
+    if( ignoreAlpha && ( a1 === 0 || a2 === 0 ) ) return 0;
 
     if (a1 === a2 && r1 === r2 && g1 === g2 && b1 === b2) return 0;
 
